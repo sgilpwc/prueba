@@ -1,0 +1,33 @@
+$inputDir = "C:\Users\gilor\Desktop\PBI\SALIDA_BIN"
+$outputFile = "C:\Users\gilor\Desktop\PBI\LIQUIDACIONES_INMUEBLE_RECONSTRUIDO.csv"
+
+$files = Get-ChildItem $inputDir -Filter "LIQUIDACIONES_INMUEBLE_part_*.csv" | Sort-Object Name
+
+if ($files.Count -eq 0) {
+    Write-Host "No se encontraron archivos de partes."
+    exit
+}
+
+$outStream = [System.IO.File]::Open($outputFile, [System.IO.FileMode]::Create)
+
+$first = $true
+
+foreach ($file in $files) {
+    $inStream = [System.IO.File]::OpenRead($file.FullName)
+
+    if ($first) {
+        $inStream.CopyTo($outStream)
+        $first = $false
+    } else {
+        while (($b = $inStream.ReadByte()) -ne -1) {
+            if ($b -eq 10) { break }
+        }
+        $inStream.CopyTo($outStream)
+    }
+
+    $inStream.Close()
+}
+
+$outStream.Close()
+
+Write-Host "Archivo reconstruido en: $outputFile"
